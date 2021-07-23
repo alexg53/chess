@@ -1,5 +1,7 @@
 # chess
 
+chess.zipp -> chess (папку рядом с main.py)
+
 Для отрисовки доски и фигур на ней используется модуль "pygame".
 Фигуры в папке chess -> images "chess\images\..."
 
