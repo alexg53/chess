@@ -1,4 +1,4 @@
-# chess
+# Chess
 
 chess.zipp -> chess (папку рядом с main.py)
 
