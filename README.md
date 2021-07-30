@@ -1,14 +1,16 @@
-# Chess
+## Chess
 
-chess.zipp -> chess (папку рядом с main.py)
+Распаковать chess.zipp -> chess (рядом с main.py)
 
-Для отрисовки доски и фигур на ней используется модуль "pygame".
+    python -version  # Python 3...
+
+Для отрисовки доски и фигур на ней, используется модуль "pygame".
+
+    cmd: "pip install pygame"  # установит модуль pygame
+
 Фигуры в папке chess -> images "chess\images\..."
 
-Запустить:
-установить python (если нет)
-в cmd: "pip install pygame"  // установит модуль pygame
-запустить файл через командную строку: "python main.py"
+    cmd: "python main.py"
 
 pyinstaller работает неправильно, в PyCharm всё идеально работает,
 поэтому пока только через командную строку (и установленный python).
