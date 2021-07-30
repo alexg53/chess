@@ -20,32 +20,34 @@ class GameState(object):
         ["bR", "bN", "bB", "bK", "bQ", "bB", "bN", "bR"]
     ]
 
-    # board = []
+    # board = [] - например boardWhite
     # nowMove = "w" or "b"  -  меняется каждый ход
-    # startMove = "w" or "b"
-    # moveLog = []
+    # startMove = "w" or "b" - начало игры
+    #
     # lastMove = []
 
-    def __init__(self, setworb):
+    def __init__(self, started):
         self.lastMove = []
-        self.lastmovebitopoleW = []
-        self.lastmovebitopoleB = []
+        self.lastDoubleMoveW = []
+        self.lastDoubleMoveB = []
 
         self.startRookMoves = [[[0, 0], False], [[0, 7], False], [[7, 0], False], [[7, 7], False]]
         self.startKing = {'w': False, 'b': False}
 
-        if setworb == "w":
+        if started == "w":
             self.board = GameState.boardWhite
             self.whiteK = (7, 4)
             self.blackK = (0, 4)
             self.nowMove = "w"
             self.startMove = "w"
-        elif setworb == "b":
+        elif started == "b":
             self.board = GameState.boardBlack
             self.whiteK = (0, 4)
             self.blackK = (7, 4)
             self.nowMove = "b"
             self.startMove = "b"
+        elif started[0] == "..":  # ".." <= [[], [], [], ... ] <- board situation (not start game)
+            self.board = started[1]
         else:
             print("ERROR: Не понятно за какой цвет играть!")
 
@@ -62,7 +64,8 @@ class GameState(object):
             if self.startRookMoves[i][0][0] == a and self.startRookMoves[i][0][1] == b:
                 self.startRookMoves[i][1] = v
                 m = True
-        if not m: print("---------------------ERROR------setStartRookMoves-----------------------------")
+        if not m:
+            print("---------------------ERROR------setStartRookMoves-----------------------------")
 
     def move(self, start, end):
         sym = self.board[start[0]][start[1]][1]
@@ -90,32 +93,30 @@ class GameState(object):
         if not _res:
             return False
 
-
         # проверка: можно ли ходить (вдруг шах моему королю)
         # пожалуй сделаю проверку при начале хода следующего игрока!
 
         t = 0
         # рокировка
-        try:
-            if _res[0] == "castling":  # _res[1]["del"][0][0]
-                # return ["castling", {"del": [[7, 0], [7, 4]], "K": [7, 2], "R": [7, 3]}]
+        if _res[0] == "castling":  # _res[1]["del"][0][0]
+            # return ["castling", {"del": [[7, 0], [7, 4]], "K": [7, 2], "R": [7, 3]}]
 
-                self.board[_res[1]["del"][0][0]][_res[1]["del"][0][1]] = "--"
-                self.board[_res[1]["del"][1][0]][_res[1]["del"][1][1]] = "--"
+            self.board[_res[1]["del"][0][0]][_res[1]["del"][0][1]] = "--"
+            self.board[_res[1]["del"][1][0]][_res[1]["del"][1][1]] = "--"
 
-                self.board[_res[1]["K"][0]][_res[1]["K"][1]] = (self.nowMove + "K")
-                self.board[_res[1]["R"][0]][_res[1]["R"][1]] = (self.nowMove + "R")
-                ##########################
-                m = "w" if self.nowMove == "b" else "b"
-                if m == "w":
-                    self.lastmovebitopoleW = []
-                elif m == "b":
-                    self.lastmovebitopoleB = []
-                self.nowMove = m
-                t = 1
-                return True
-        except:
-            pass
+            self.board[_res[1]["K"][0]][_res[1]["K"][1]] = (self.nowMove + "K")
+            self.board[_res[1]["R"][0]][_res[1]["R"][1]] = (self.nowMove + "R")
+            # #########################
+            m = "w" if self.nowMove == "b" else "b"
+            if m == "w":
+                self.lastDoubleMoveW = []
+            elif m == "b":
+                self.lastDoubleMoveB = []
+            self.nowMove = m
+            t = 1
+            return True
+        # except Exception:
+        #     print("Error " + str(Exception) + ": castling move (def move())")
 
         if t == 0:
             # Если ход может выполняться, то ниже происходит выполнение (не рокировки)
@@ -128,17 +129,15 @@ class GameState(object):
             # ХОД ВЫПОЛНЕН, СИТУАЦИЯ НА ДОСКЕ ИЗМЕНИЛАСЬ #
             ##############################################
 
-
-
             #######################################
             # ниже ход передаётся, другой стороне #
             #######################################
 
             m = "w" if self.nowMove == "b" else "b"
             if m == "w":
-                self.lastmovebitopoleW = []
+                self.lastDoubleMoveW = []
             elif m == "b":
-                self.lastmovebitopoleB = []
+                self.lastDoubleMoveB = []
             self.nowMove = m
             return True
         # Конец выполнения
@@ -153,23 +152,23 @@ class GameState(object):
             if _a * (_e[0] - _s[0]) == 1 and self.board[_e[0]][_e[1]] == "--":
                 return True  # 1 шаг вперед
             elif _a * (_e[0] - _s[0]) == 2 and self.board[_e[0] - _a][_e[1]] == "--" and self.board[_e[0]][_e[1]] == "--" and _s[0] == (-2.5 * float(_a)) + 3.5:
-                if self.nowMove == "w":
-                    self.lastmovebitopoleW = [_s[0] + _a, _s[1], _e[0], _e[1]]
-                elif self.nowMove == "b":
-                    self.lastmovebitopoleB = [_s[0] + _a, _s[1], _e[0], _e[1]]
+                # if self.nowMove == "w":
+                #    self.lastDoubleMoveW = [_s[0] + _a, _s[1], _e[0], _e[1]]
+                # elif self.nowMove == "b":
+                #    self.lastDoubleMoveB = [_s[0] + _a, _s[1], _e[0], _e[1]]
+                self.lastDoubleMoveW = [_s[0] + _a, _s[1], _e[0], _e[1]]
                 return True  # 2 шага вперед (только в начале)
         elif (_e[0] - _s[0] == 1 * _a) and (_s[1] - _e[1] == 1 or _s[1] - _e[1] == -1):
             if self.board[_e[0]][_e[1]][0] == eC:
                 return True
-            elif self.nowMove == "w" and len(self.lastmovebitopoleB) != 0:
-                if _e[0] == self.lastmovebitopoleB[0] and _e[1] == self.lastmovebitopoleB[1]:
-                    self.board[self.lastmovebitopoleB[2]][self.lastmovebitopoleB[3]] = "--"
+            elif self.nowMove == "w" and len(self.lastDoubleMoveB) != 0:
+                if _e[0] == self.lastDoubleMoveB[0] and _e[1] == self.lastDoubleMoveB[1]:
+                    self.board[self.lastDoubleMoveB[2]][self.lastDoubleMoveB[3]] = "--"
                     return True
-            elif self.nowMove == "b" and len(self.lastmovebitopoleW) != 0:
-                if _e[0] == self.lastmovebitopoleW[0] and _e[1] == self.lastmovebitopoleW[1]:
-                    self.board[self.lastmovebitopoleW[2]][self.lastmovebitopoleW[3]] = "--"
+            elif self.nowMove == "b" and len(self.lastDoubleMoveW) != 0:
+                if _e[0] == self.lastDoubleMoveW[0] and _e[1] == self.lastDoubleMoveW[1]:
+                    self.board[self.lastDoubleMoveW[2]][self.lastDoubleMoveW[3]] = "--"
                     return True
-
 
     def getRookMoves(self, _s, _e):
         _d = ((1, 0), (0, -1), (-1, 0), (0, 1))
@@ -184,13 +183,13 @@ class GameState(object):
                     if endPiece == "--":
                         _moves.append((endRow, endCol))
                     elif endPiece[0] == eC:
-                            if endPiece[1] == "K":
-                                # Игра окончена, победили _clr (w or b)
-                                # тот случай когда ладья может бить вражеского короля
-                                pass
-                            else:
-                                _moves.append((endRow, endCol))
-                                break
+                        if endPiece[1] == "K":
+                            # Игра окончена, победили _clr (w or b)
+                            # тот случай когда ладья может бить вражеского короля
+                            pass
+                        else:
+                            _moves.append((endRow, endCol))
+                            break
                     else:
                         break
                 else:
@@ -199,7 +198,7 @@ class GameState(object):
         for _i in _moves:
             if (_e[0], _e[1]) == _i:
                 if (_s[0] == 0 or _s[0] == 7) and (_s[1] == 0 or _s[1] == 7):
-                    if self.getStartRookMoves(_s[0], _s[1]) == False:
+                    if not self.getStartRookMoves(_s[0], _s[1]):
                         self.setStartRookMoves(_s[0], _s[1], True)
                 return True
         return False
@@ -257,7 +256,6 @@ class GameState(object):
                 return False
         return True
 
-
     def getKingMoves(self, _s, _e):
         _d = ((-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1))
         _moves = []
@@ -272,55 +270,55 @@ class GameState(object):
                     else:
                         _moves.append((endRow, endCol))
 
-        ########################## РОКИРОВКА
-        if self.startKing[self.nowMove] == False:
+        # ######################### РОКИРОВКА
+        if not self.startKing[self.nowMove]:
             if self.nowMove == "w":  # ход белых (белый король и ладья)
                 if self.startMove == "w":
                     if _e[0] == 7:
                         if _e[1] == 2:
-                            if self.getStartRookMoves(7, 0) == False and self.board[7][1] == "--" and self.board[7][2] == "--" and self.board[7][3] == "--":
+                            if not self.getStartRookMoves(7, 0) and self.board[7][1] == "--" and self.board[7][2] == "--" and self.board[7][3] == "--":
                                 self.setStartRookMoves(7, 0, True)
                                 return ["castling", {"del": [[7, 0], [7, 4]], "K": [7, 2], "R": [7, 3]}]
                         elif _e[1] == 6:
-                            if self.getStartRookMoves(7, 7) == False and self.board[7][6] == "--" and self.board[7][5] == "--":
+                            if not self.getStartRookMoves(7, 7) and self.board[7][6] == "--" and self.board[7][5] == "--":
                                 self.setStartRookMoves(7, 7, True)
                                 return ["castling", {"del": [[7, 7], [7, 4]], "K": [7, 6], "R": [7, 5]}]
                 else:
                     if _e[0] == 0:
                         if _e[1] == 1:
-                            if self.getStartRookMoves(0, 0) == False and self.board[0][1] == "--" and self.board[0][2] == "--":
+                            if not self.getStartRookMoves(0, 0) and self.board[0][1] == "--" and self.board[0][2] == "--":
                                 self.setStartRookMoves(0, 0, True)
                                 return ["castling", {"del": [[0, 0], [0, 3]], "K": [0, 1], "R": [0, 2]}]
                         elif _e[1] == 5:
-                            if self.getStartRookMoves(0, 7) == False and self.board[0][6] == "--" and self.board[0][5] == "--" and self.board[0][4] == "--":
+                            if not self.getStartRookMoves(0, 7) and self.board[0][6] == "--" and self.board[0][5] == "--" and self.board[0][4] == "--":
                                 self.setStartRookMoves(0, 7, True)
                                 return ["castling", {"del": [[0, 7], [0, 3]], "K": [0, 5], "R": [0, 4]}]
             else:  # ход черных (черный король и ладья)
                 if self.startMove == "w":
                     if _e[0] == 0:
                         if _e[1] == 2:
-                            if self.getStartRookMoves(0, 0) == False and self.board[0][1] == "--" and self.board[0][2] == "--" and self.board[0][3] == "--":
+                            if not self.getStartRookMoves(0, 0) and self.board[0][1] == "--" and self.board[0][2] == "--" and self.board[0][3] == "--":
                                 self.setStartRookMoves(0, 0, True)
                                 return ["castling", {"del": [[0, 0], [0, 4]], "K": [0, 2], "R": [0, 3]}]
                         elif _e[1] == 6:
-                            if self.getStartRookMoves(0, 7) == False and self.board[0][6] == "--" and self.board[0][5] == "--":
+                            if not self.getStartRookMoves(0, 7) and self.board[0][6] == "--" and self.board[0][5] == "--":
                                 self.setStartRookMoves(0, 7, True)
                                 return ["castling", {"del": [[0, 7], [0, 4]], "K": [0, 6], "R": [0, 5]}]
                 else:
                     if _e[0] == 7:
                         if _e[1] == 1:
-                            if self.getStartRookMoves(7, 0) == False and self.board[7][1] == "--" and self.board[7][2] == "--":
+                            if not self.getStartRookMoves(7, 0) and self.board[7][1] == "--" and self.board[7][2] == "--":
                                 self.setStartRookMoves(7, 0, True)
                                 return ["castling", {"del": [[7, 0], [7, 3]], "K": [7, 1], "R": [7, 2]}]
                         elif _e[1] == 5:
-                            if self.getStartRookMoves(7, 7) == False and self.board[7][6] == "--" and self.board[7][5] == "--" and self.board[7][4] == "--":
+                            if not self.getStartRookMoves(7, 7) and self.board[7][6] == "--" and self.board[7][5] == "--" and self.board[7][4] == "--":
                                 self.setStartRookMoves(7, 7, True)
                                 return ["castling", {"del": [[7, 7], [7, 3]], "K": [7, 5], "R": [7, 4]}]
-        ########################## END
+        # ######################### END
 
         for _i in _moves:
             if (_e[0], _e[1]) == _i:
-                if self.startKing[self.nowMove] == False:
+                if not self.startKing[self.nowMove]:
                     self.startKing[self.nowMove] = True
                 return True
         if self.startMove == "w":
@@ -362,12 +360,12 @@ def main():
     _p = ""  # main Class attribute
     while befRun:
         befRun = not befRun
-        a = ""
-        try:
-            a: str = input(t)
-        except:
-            raise SystemExit(1)
-        
+        # a = ""
+        # try:
+        a = input(t)
+        # except:
+        #     raise SystemExit(1)
+
         if a.lower() == "w" or a.lower() == "б":
             _p = "w"
             b = "белых!"
@@ -409,7 +407,7 @@ def main():
                 loc = P.mouse.get_pos()  # (x, y) mouse
                 col = (loc[0] - marginVisual) // SQ_SIZE  # 0..7
                 row = (loc[1] - marginVisual) // SQ_SIZE  # 0..7
-                if(marginVisual <= loc[0] <= chessWidth + marginVisual and marginVisual <= loc[1] <= chessHeight + marginVisual):
+                if marginVisual <= loc[0] <= chessWidth + marginVisual and marginVisual <= loc[1] <= chessHeight + marginVisual:
                     f = C.board[row][col][1] != "-"  # f = True когда поле заполнено
                     bw = C.board[row][col][0] == C.nowMove  # bw = True когда фигура твоя
 
@@ -419,16 +417,16 @@ def main():
 
                     if sqSelected == () and f and bw:  # если ничего не выбрано и выбираемое поле ВЫБРАТЬ МОЖНО
                         sqSelected = (row, col)  # поле выбрано
-                    elif (sqSelected != (row, col) and sqSelected != ()):  # если ты атакуешь или перемещаешь
+                    elif sqSelected != (row, col) and sqSelected != ():  # если ты атакуешь или перемещаешь
                         # print("( ['bw': " + str(bw) + "] or not ['f': " + str(f) + "] ) and " + str(sqSelected != (row, col)) + " = (" + str(bw or not f) + ") " + str(sqSelected != (row, col)) + " = " + str((bw or not f) and sqSelected != (row, col)))
-                        #bw = C.board[sqSelected[0]][sqSelected[1]][0] == C.nowMove  # bw = True когда фигура твоя
-                        if (not bw):
+                        # bw = C.board[sqSelected[0]][sqSelected[1]][0] == C.nowMove  # bw = True когда фигура твоя
+                        if not bw:
                             res = C.move(sqSelected, (row, col))
                             sqSelected = ()
-                            if (res != True):
+                            if res != True:
                                 sqError = (row, col)
                                 clock_time = 5
-                        elif (bw):
+                        elif bw:
                             sqSelected = (row, col)
 
         # <START DRAW BOARD>
@@ -437,18 +435,17 @@ def main():
             for c in range(8):
                 color = colors[((r + c) % 2)]
                 d = 1
-                if ((r + c) % 2 == 0):
+                if (r + c) % 2 == 0:
                     d = CHESS_COLORS[CHESS_COLOR][2][3]
-                if (sqSelected == (r, c)):
+                if sqSelected == (r, c):
                     color = (CHESS_COLORS[CHESS_COLOR][((r + c) % 2)][0] + (CHESS_COLORS[CHESS_COLOR][2][0] * d),
                              CHESS_COLORS[CHESS_COLOR][((r + c) % 2)][1] + (CHESS_COLORS[CHESS_COLOR][2][1] * d),
                              CHESS_COLORS[CHESS_COLOR][((r + c) % 2)][2] + (CHESS_COLORS[CHESS_COLOR][2][2] * d))
-                if (sqError == (r, c) and clock_time > 0):
+                if sqError == (r, c) and clock_time > 0:
                     color = (CHESS_COLORS[CHESS_COLOR][((r + c) % 2)][0],
                              CHESS_COLORS[CHESS_COLOR][((r + c) % 2)][1] - (64 * d),
                              CHESS_COLORS[CHESS_COLOR][((r + c) % 2)][2] - (64 * d))
-                P.draw.rect(S, color,
-                            P.Rect((c * SQ_SIZE) + marginVisual, (r * SQ_SIZE) + marginVisual, SQ_SIZE, SQ_SIZE))
+                P.draw.rect(S, color, P.Rect((c * SQ_SIZE) + marginVisual, (r * SQ_SIZE) + marginVisual, SQ_SIZE, SQ_SIZE))
                 piece = C.board[r][c]
                 if piece != '--':
                     S.blit(IMAGES[piece],
@@ -457,11 +454,11 @@ def main():
         # .....
         # {UPDATE APP}
         clock.tick(MAX_FPS)
-        if (clock_time > 0):
+        if clock_time > 0:
             clock_time = clock_time - 1
         P.display.flip()
 
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 #    main()
 main()
